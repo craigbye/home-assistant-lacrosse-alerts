@@ -6,7 +6,7 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://www.home-assistant.io/integrations/lacrosse_alerts",
+  "documentation": "https://github.com/craigbye/home-assistant-lacrosse-alerts",
   "homekit": {},
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
