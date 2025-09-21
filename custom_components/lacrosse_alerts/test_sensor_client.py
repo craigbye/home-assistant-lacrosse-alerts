@@ -6,10 +6,10 @@ from lacrosse_sensor_client import SensorClient
 logging.basicConfig(level=logging.INFO)
 
 async def main():
-    # Replace with your actual test URL and sensor ID
+    
     test_url = "https://decent-destiny-704.appspot.com/laxservices/device_info.php"
-    test_id = "0001C1FFA29EB687"
-    #test_id = "0001742B6DC51F73"
+    # Replace with your sensor ID
+    test_id = "0000000000000000"
 
     client = SensorClient(test_url, test_id)
     await client.update()

@@ -47,20 +47,6 @@ _LOGGER = logging.getLogger(__name__)
 TYPES = ["battery", "humidity", "temperature"]
 LACROSSE_URL = "http://decent-destiny-704.appspot.com/laxservices/device_info.php"
 
-# SENSOR_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_ID): cv.string,
-#         vol.Required(CONF_TYPE): vol.In(TYPES),
-#         vol.Optional(CONF_NAME): cv.string,
-#     }
-# )
-
-# PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-#     {
-#         vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
-#         vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-#     }
-# )
 
 from . import LaCrosseConfigEntry
 
@@ -75,21 +61,23 @@ async def async_setup_entry(
     # Fetch initial data to determine model
     await client.update()  
 
-    # Create one set of sensors for this client
+    # Create set of sensors for this client
     entities = [
         LaCrosseTemperature(client, entry.data["name"]),
         LaCrosseHumidity(client, entry.data["name"]),
         LaCrosseBattery(client, entry.data["name"]),
+        LaCrosseLinkQuality(client, entry.data["name"]),
+        LaCrosseTimestampSensor(client, entry.data["name"]),
     ]
 
     if client.device_type == "TX70":
         entities.append(LaCrosseWaterSensor(client, entry.data["name"]))
+
+    if client.device_type == "TX60":
+        entities.append(LaCrosseProbeTemperature(client, entry.data["name"]))
     
 
     async_add_entities(entities)
-
-    # sensors = await client.get_sensors()
-    # async_add_entities([LaCrosseSensor(sensor) for sensor in sensors])
 
 
 class BaseLaCrosseSensor(SensorEntity):
@@ -135,12 +123,57 @@ class LaCrosseTemperature(BaseLaCrosseSensor):
     _attr_state_class = "measurement"
 
     def __init__(self, client: SensorClient, device_name: str):
-        super().__init__(client, device_name, "temperature")
+        super().__init__(client, device_name, "ambient temperature")
 
 
     @property
     def native_value(self) -> StateType:
         return self._client.ambient_temperature
+    
+class LaCrosseProbeTemperature(BaseLaCrosseSensor):
+    """Probe temperature sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_device_class = "temperature"
+    _attr_state_class = "measurement"
+
+    def __init__(self, client: SensorClient, device_name: str):
+        super().__init__(client, device_name, "probe temperature")
+
+
+    @property
+    def native_value(self) -> StateType:
+        return self._client.probe_temperature
+
+
+class LaCrosseLinkQuality(BaseLaCrosseSensor):
+    """Link Quality sensor."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = "signal_strength"
+    _attr_state_class = "measurement"
+
+    def __init__(self, client: SensorClient, device_name: str):
+        super().__init__(client, device_name, "link quality")
+
+
+    @property
+    def native_value(self) -> StateType:
+        return self._client.link_quality
+
+class LaCrosseTimestampSensor(BaseLaCrosseSensor):
+
+
+    _attr_device_class = "timestamp"
+    _attr_state_class = "measurement"
+
+    def __init__(self, client: SensorClient, device_name: str):
+        super().__init__(client, device_name, "sensor timestamp")
+
+    @property
+    def native_value(self):
+        # Return the timestamp as a datetime object (UTC or local)
+        return dt_util.as_local(self._client.measured_time)
 
 
 class LaCrosseHumidity(BaseLaCrosseSensor):
@@ -192,12 +225,6 @@ class LaCrosseWaterSensor(BinarySensorEntity):
         self._attr_unique_id = f"{client._sensor_id}_water"
         self._attr_extra_state_attributes = {}
 
-        # self._client = client
-        # self._sensor_id = client._sensor_id
-        # self._device_name = device_name
-        # self._attr_should_poll = True
-        # self._attr_name = f"{device_name} Water"
-        # self._attr_unique_id = f"{self._sensor_id}_water"
         self._attr_device_class = "moisture"
 
     async def async_update(self):
@@ -208,16 +235,6 @@ class LaCrosseWaterSensor(BinarySensorEntity):
         """Return True if water is present, False if dry, None if unknown."""
         return self._client.water_present
 
-    # @property
-    # def device_info(self) -> dict:
-    #     return {
-    #         "identifiers": {(DOMAIN, self._client.device_id)},
-    #         #"identifiers": {(DOMAIN, self._sensor_id)},
-    #         "name": self._device_name,
-    #         "manufacturer": "LaCrosse Technology",
-    #         "model": self._client.device_type or "Unknown",
-    #         "configuration_url": self._client._base_url,
-    #     }
     
     @property
     def device_info(self) -> dict:
