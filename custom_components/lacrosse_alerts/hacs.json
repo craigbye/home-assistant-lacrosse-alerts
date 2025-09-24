@@ -6,5 +6,6 @@
   "iot_class": "cloud_polling",
   "render_readme": true,
   "version": "1.0.0",
-  "homeassistant": "2023.5.0"
+  "homeassistant": "2023.5.0",
+  "country" : ["US", "CA"]
 }
