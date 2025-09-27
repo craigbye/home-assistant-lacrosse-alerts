@@ -1,14 +1,13 @@
 {
   "domain": "lacrosse_alerts",
   "name": "La Crosse Alerts Sensors",
-  "codeowners": [
-    "@craigbye"
-  ],
+  "codeowners": ["@craigbye"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/craigbye/home-assistant-lacrosse-alerts",
   "homekit": {},
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/craigbye/home-assistant-lacrosse-alerts/issues",
   "quality_scale": "bronze",
   "requirements": [],
   "ssdp": [],
