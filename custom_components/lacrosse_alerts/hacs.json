@@ -1,11 +1,9 @@
 {
   "name": "La Crosse Alerts Sensors",
   "content_in_root": false,
-  "domain": "lacrosse_alerts",
-  "codeowners": ["@craigbye"],
-  "iot_class": "cloud_polling",
-  "render_readme": true,
-  "version": "1.0.0",
+  "zip_release": false,
+  "hide_default_branch": true,
+  "country" : ["US", "CA"],
   "homeassistant": "2023.5.0",
-  "country" : ["US", "CA"]
+  "hacs": "1.17.0" 
 }
