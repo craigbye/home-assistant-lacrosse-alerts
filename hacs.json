@@ -1,0 +1,9 @@
+{
+  "name": "La Crosse Alerts Sensors",
+  "content_in_root": false,
+  "zip_release": false,
+  "hide_default_branch": true,
+  "country" : ["US", "CA"],
+  "homeassistant": "2023.5.0",
+  "hacs": "1.17.0" 
+}

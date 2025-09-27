@@ -1,6 +1,0 @@
-{
-  "name": "La Crosse Alerts Sensors",
-  "content_in_root": false,
-  "domain": "lacrosse_alerts",
-  "codeowners": ["@craigbye"]
-}
