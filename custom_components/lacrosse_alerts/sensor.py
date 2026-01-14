@@ -125,6 +125,11 @@ class LaCrosseTemperature(BaseLaCrosseSensor):
     def __init__(self, client: SensorClient, device_name: str):
         super().__init__(client, device_name, "ambient temperature")
 
+    
+    @property
+    def available(self) -> bool:
+        # Reflect whether the latest update from the webservice was valid
+        return self._client._valid
 
     @property
     def native_value(self) -> StateType:
@@ -140,6 +145,10 @@ class LaCrosseProbeTemperature(BaseLaCrosseSensor):
     def __init__(self, client: SensorClient, device_name: str):
         super().__init__(client, device_name, "probe temperature")
 
+    @property
+    def available(self) -> bool:
+        # Reflect whether the latest update from the webservice was valid
+        return self._client._valid
 
     @property
     def native_value(self) -> StateType:
@@ -150,8 +159,9 @@ class LaCrosseLinkQuality(BaseLaCrosseSensor):
     """Link Quality sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = "signal_strength"
+    _attr_device_class = None
     _attr_state_class = "measurement"
+    _attr_suggested_display_precision = 0
 
     def __init__(self, client: SensorClient, device_name: str):
         super().__init__(client, device_name, "link quality")
@@ -164,8 +174,10 @@ class LaCrosseLinkQuality(BaseLaCrosseSensor):
 class LaCrosseTimestampSensor(BaseLaCrosseSensor):
 
 
-    _attr_device_class = "timestamp"
-    _attr_state_class = "measurement"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_state_class = None
+    _attr_native_unit_of_measurement = None
+
 
     def __init__(self, client: SensorClient, device_name: str):
         super().__init__(client, device_name, "sensor timestamp")

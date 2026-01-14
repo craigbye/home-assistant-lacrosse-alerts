@@ -11,12 +11,11 @@ class SensorClient:
         self._base_url = base_url
         self._sensor_id = sensor_id
         self._data = {}
-        self._valid = False
+        self._valid = False     # true if last update was successful
+        self._last_data = None  # cache for last valid data
 
     async def update(self):
         """Fetch and parse sensor data from the remote API asynchronously."""
-        self._data = {}
-        self._valid = False
 
         url = f"{self._base_url}?deviceid={self._sensor_id}&metric=1"
 
@@ -28,44 +27,54 @@ class SensorClient:
         
         except (aiohttp.ClientError, aiohttp.ClientResponseError, asyncio.TimeoutError) as e:
             _LOGGER.error("Request failed for sensor %s: %s", self._sensor_id, e)
+            self._valid = False
             return
 
         except Exception as e:
             _LOGGER.error("Unexpected error for sensor %s: %s", self._sensor_id, e)
+            self._valid = False
             return
 
         device_data = raw.get("device0")
         if not device_data:
             _LOGGER.warning("Missing 'device0' in response for sensor %s", self._sensor_id)
+            self._valid = False
             return
 
         obs_list = device_data.get("obs")
         if not isinstance(obs_list, list) or not obs_list:
             _LOGGER.warning("Missing or invalid 'obs' list for sensor %s", self._sensor_id)
+            self._valid = False
             return
 
         self._data = obs_list[0]
+        self_last_data = self._data
         self._valid = True
 
 
     @property
     def ambient_temperature(self):
-        value = self._data.get("ambient_temp")
+        src = self._data if self._valid else (self._last_data or {})
+        value = src.get("ambient_temp")
         return value if isinstance(value, (int, float)) else None
     
     @property
     def probe_temperature(self):
-        value = self._data.get("probe_temp")
+        src = self._data if self._valid else (self._last_data or {})
+        value = src.get("probe_temp")
         return value if isinstance(value, (int, float)) else None
 
     @property
     def humidity(self):
-        value = self._data.get("humidity")
+        src = self._data if self._valid else (self._last_data or {})
+        value = src.get("humidity")
         return value if isinstance(value, (int, float)) else None
 
     @property
     def low_battery(self):
-        return self._data.get("lowbattery") == "1"
+        src = self._data if self._valid else (self._last_data or {})
+        value = src.get("lowbattery")
+        return value == "1"
 
     @property
     def water_present(self):
@@ -82,8 +91,10 @@ class SensorClient:
 
     @property
     def link_quality(self):
-        value = self._data.get("linkquality")
+        src = self._data if self._valid else (self._last_data or {})
+        value = src.get("linkquality")
         return value if isinstance(value, int) else None
+
 
     @property
     def device_id(self):
@@ -95,7 +106,8 @@ class SensorClient:
 
     @property
     def device_type(self):
-        value = self._data.get("device_type")
+        src = self._data if self._valid else (self._last_data or {})
+        value = src.get("device_type")
         return value if isinstance(value, (str)) else None
 
     @property
@@ -106,7 +118,8 @@ class SensorClient:
     @property
     def measured_time(self):
         """Return the UTC datetime of the measurement, or None if invalid."""
-        raw_ts = self._data.get("utctime")
+        src = self._data if self._valid else (self._last_data or {})
+        raw_ts = src.get("utctime")
         if isinstance(raw_ts, (int, float)):
             try:
                 return datetime.fromtimestamp(raw_ts, tz=timezone.utc)
